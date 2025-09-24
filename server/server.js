@@ -20,10 +20,7 @@ app.use(cors(corsOptions));
 
 //middleware
 app.use(express.json());
-app.use(clerkMiddleware({
-    apiKey: process.env.CLERK_SECRET_KEY,
-    apiVersion: 2,
-}));
+app.use(clerkMiddleware());
 //API TO LISTEN TO CLERK WEBHOOKS
 app.use("/api/clerk",clerkWebHooks);
 // Routes
