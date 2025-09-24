@@ -3,22 +3,20 @@ import User from "../models/user.js";
 
 const clerkWebHooks = async (req, res) => {
   try {
-
-    //Create a svix  instance with the webhook secret
-       const whook=new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-    //getting the headers
     const headers = {
       "svix-id": req.headers["svix-id"],
       "svix-timestamp": req.headers["svix-timestamp"],
       "svix-signature": req.headers["svix-signature"],
     };
 
-    //verify the headers
-     await whook.verify(JSON.stringify(req.body), headers);
-   //Getting Data from the request body
-    const {data,type } = req.body;
+    const payload = req.body.toString(); // raw body
+    const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
+    await wh.verify(payload, headers);
+
+    const { data, type } = JSON.parse(payload);
+
     const userData = {
-      _Id: data.id,
+      _id: data.id, // or clerkId if you prefer
       email: data.email_addresses[0].email_address,
       username: `${data.first_name} ${data.last_name}`,
       image: data.image_url,
@@ -29,12 +27,10 @@ const clerkWebHooks = async (req, res) => {
         await User.create(userData);
         break;
       case "user.updated":
-        await User.findByIdAndUpdate(data.id ,userData);
+        await User.findByIdAndUpdate(data.id, userData);
         break;
       case "user.deleted":
         await User.findByIdAndDelete(data.id);
-        break;
-      default:
         break;
     }
 
